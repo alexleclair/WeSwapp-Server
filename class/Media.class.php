@@ -13,7 +13,10 @@ class Media extends BaseObject{
 		$sizeY = mt_rand(200,500);
 		$processors = array('http://www.fillmurray.com/', 'http://www.placecage.com/', 'http://baconmockup.com/');
 		$url = $processors[mt_rand(0,count($processors)-1)];
-		return $url.$sizeX.'/'.$sizeY;
+		if(strpos($this->url, 'http')===0){
+			return $this->url;
+		}
+		//return $url.$sizeX.'/'.$sizeY;
 		return 'http://'.$_SERVER['HTTP_HOST'].'/uploads/'.$this->url;
 	}
 	public function processPicture(&$image){

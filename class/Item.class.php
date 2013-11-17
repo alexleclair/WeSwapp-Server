@@ -10,18 +10,30 @@ class Item extends BaseObject{
 		}
 	}
 
-	public function getAllData(){
+	public function getAllData($userId=null){
+		require_once dirname(__FILE__).'/User.class.php';
+
 		$user = new User($this->get('user_id'));
 	    $_item = $this->getData();
 	    $_item['user'] = $user->getData();
 	    $_item['medias'] = [];
-
+	    $_item['favorited'] = false;
 	    foreach($this->getMedias() as $media){
 	        if(!$media->is_active){
 	            continue;
 	        }
 	        $_item['medias'][] = $media->getUrl();
 	    }
+
+	    if(isset($userId)){
+	    	$sql = 'SELECT COUNT(*) cnt FROM user_favorites WHERE item_id=%d AND user_id=%d AND is_active=1';
+	    	$sql = sprintf($sql, $this->id, $userId);
+	 
+			$result = BaseObject::query($sql);
+			$row = mysqli_fetch_assoc($result);
+			$_item['favorited'] = $row['cnt'] > 0;
+	    }
+
 	    return $_item;
 	}
 	
