@@ -159,6 +159,8 @@ $app->post('/contacts/', function(){
     global $app;
 
     require_once 'class/Contact.class.php';
+    require_once 'class/User.class.php';
+    require_once 'class/Item.class.php';
 
     if(!$currentUser){
         return print(Response::toJSON(NULL, 403));
@@ -172,7 +174,7 @@ $app->post('/contacts/', function(){
         return print(Response::toJSON(NULL,400,'Missing requested_item_id'));
     }
     $requested_item = new Item($data['requested_item_id']);
-    if(!$item->get('id')){
+    if(!$requested_item->get('id')){
         return print(Response::toJSON(NULL,404));
     }
 
@@ -185,7 +187,7 @@ $app->post('/contacts/', function(){
         return print(Response::toJSON(NULL,404));
     }
 
-    if($item->user_id == $currentUser->id){
+    if($item->user_id != $currentUser->id){
         return print(Response::toJSON(NULL,400, 'You can\'t swap someone else\'s item'));
     }
 
@@ -194,7 +196,7 @@ $app->post('/contacts/', function(){
     $Contact->user_id = $currentUser->id;
     $Contact->requested_item_id = $requested_item->id;
     $Contact->save();
-    return print(Response::toJSON());
+    return print(Response::toJSON($Contact->getData()));
 
 });
 
