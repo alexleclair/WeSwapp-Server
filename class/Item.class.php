@@ -33,8 +33,19 @@ class Item extends BaseObject{
 			$row = mysqli_fetch_assoc($result);
 			$_item['favorited'] = $row['cnt'] > 0;
 	    }
-
+	    $_item['tags'] = $this->getTags();
 	    return $_item;
+	}
+
+	public function getTags(){
+		$tags = array();
+		$words = preg_split("/[\s,]*\\\"([^\\\"]+)\\\"[\s,]*|" . "[\s,]*'([^']+)'[\s,]*|" . "[\s,]+/", $this->description, 0, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+		foreach($words as $word){
+			if(substr($word, 0, 1) == '#'){
+				$tags[] = $word;
+			}
+		}
+		return $tags;
 	}
 	
 	public function getMedias(){

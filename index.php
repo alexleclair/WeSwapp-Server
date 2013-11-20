@@ -9,6 +9,8 @@
  */
 require 'Slim/Slim.php';
 require 'class/Response.class.php';
+require_once 'class/Shared.class.php';
+
 header("Access-Control-Allow-Origin: *");
 
 \Slim\Slim::registerAutoloader();
@@ -25,6 +27,8 @@ $facebook = new Facebook(array(
   'appId'  => '496720737093812',
   'secret' => '746494126d8ff117b27bbcf51b2aee01',
 ));
+
+Shared::$Facebook = $facebook;
 
 $authToken = null;
 if(isset($_REQUEST['authToken'])){
@@ -297,9 +301,11 @@ $app->get('/items/', function(){
     global $app;
     global $currentUser;
     require_once 'class/ItemListing.class.php';
-    
+    $body = json_decode($app->request->getBody(), true);
+    $data = array_merge($_REQUEST, isset($body) ? $body : array());
+
     $id = $currentUser?$currentUser->id : null;
-    $items = ItemListing::getItems(true, $id);
+    $items = ItemListing::getItems(true, $id, $data);
 
     return print(Response::toJSON($items));
 });
@@ -312,6 +318,7 @@ $app->post('/items/:id', function($id){
     }
     require_once 'class/Item.class.php';
     require_once 'class/Media.class.php';
+    require_once 'class/Tag.class.php';
 
     $item = new Item($id);
     if(!$item->get('id')){
@@ -355,14 +362,18 @@ $app->post('/items/:id', function($id){
     }
 
     foreach($data['medias'] as $media){
-            $Media = new Media();
-            $Media->item_id = $id;
-            $Media->processPicture($media);
-            $Media->save();
-        }
+        $Media = new Media();
+        $Media->item_id = $id;
+        $Media->processPicture($media);
+        $Media->save();
+    }
+    Tag::removeTags($item->id);
+    Tag::addTags($item->id, $item->getTags());
+
     return print(Response::toJSON());
 
 });
+
 
 $app->post(
     '/items',
@@ -413,6 +424,7 @@ $app->post(
 
         require_once 'class/Item.class.php';
         require_once 'class/Media.class.php';
+        require_once 'class/Tag.class.php';
 
         $Item = new Item();
         $Item->description = $data['description'];
@@ -430,6 +442,8 @@ $app->post(
             $Media->processPicture($media);
             $Media->save();
         }
+        
+        Tag::addTags($item->id, $item->getTags());
 
         return print(Response::toJSON($Item->getAllData($currentUser->id)));
 

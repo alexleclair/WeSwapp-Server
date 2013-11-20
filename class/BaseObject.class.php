@@ -5,8 +5,8 @@ class BaseObject{
 	protected $_primaryKey = 'id';
 
 	public static $_db;
-	private $data = array();
-	private $result;
+	protected $data = array();
+	protected $result;
 
 	protected function _load($id){
 		$this->_getDb();
@@ -19,6 +19,11 @@ class BaseObject{
 	public static function query($sql){
 		self::__getDb();
 		return mysqli_query(self::$_db, $sql);
+	}
+
+	public static function escapeString($str){
+		self::__getDb();
+		return mysqli_real_escape_string(self::$_db, $str);
 	}
 
 	public function load($id){
